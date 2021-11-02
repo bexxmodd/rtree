@@ -3,7 +3,7 @@ use std::boxed::Box;
 
 type ChildNode<T> = Option<Box<Node<T>>>;
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Node<T: PartialOrd + Display + Clone> {
     value: Option<T>,
     left: ChildNode<T>,
@@ -11,6 +11,7 @@ pub struct Node<T: PartialOrd + Display + Clone> {
 }
 
 impl<T: PartialOrd + Display + Clone> Node<T> {
+
     fn new(val: T) -> Self {
         Node {
             value: Some(val),
@@ -20,7 +21,17 @@ impl<T: PartialOrd + Display + Clone> Node<T> {
     }
 }
 
-#[derive(Default, Debug)]
+impl<T: PartialOrd + Display + Clone> Default for Node<T> {
+    fn default() -> Self {
+        Node {
+            value: None,
+            left: None,
+            right: None,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Tree<T: PartialOrd + Display + Clone> {
     root: Node<T>,
     pub length: usize,
@@ -28,18 +39,27 @@ pub struct Tree<T: PartialOrd + Display + Clone> {
 
 impl<T: PartialOrd + Display + Clone> Tree<T> {
 
+    pub fn new() -> Self {
+        Tree {
+            root: Node::default(),
+            length: 0,
+        }
+    }
+
     /// Create new BinarySearchTree with given value as a root Node
-    pub fn new(val: T) -> Self {
+    pub fn new_with(val: T) -> Self {
         Tree {
             root: Node::new(val),
             length: 1,
         }
     }
 
+    /// Get the left child of the Node. Method panics if node is empty
     pub fn get_left_child(&self) -> &Node<T> {
         self.root.left.as_ref().unwrap()
     }
 
+    /// Get the right child of the Node. Method panics if node is empty
     pub fn get_right_child(&self) -> &Node<T> {
         self.root.right.as_ref().unwrap()
     }
@@ -68,19 +88,19 @@ impl<T: PartialOrd + Display + Clone> Tree<T> {
         self._contains(&self.root, val)
     }
 
-    fn _contains(&self, n: &Node<T>, val: T) -> bool {
-        if let Some(v) = n.value.as_ref() {
-            if v == &val {
-                true
-            } else if v > &val {
-                return self._contains(n.left.as_ref().unwrap(), val)
+        fn _contains(&self, n: &Node<T>, val: T) -> bool {
+            if let Some(v) = n.value.as_ref() {
+                if v == &val {
+                    true
+                } else if v > &val {
+                    return self._contains(n.left.as_ref().unwrap(), val)
+                } else {
+                    return self._contains(n.right.as_ref().unwrap(), val)
+                }
             } else {
-                return self._contains(n.right.as_ref().unwrap(), val)
+                false
             }
-        } else {
-            false
         }
-    }
 
     /// Add node to the BinarySearchTree
     pub fn add(&mut self, val: T) {
@@ -163,15 +183,13 @@ mod tests {
 
     #[test]
     fn test_tree_constructor() {
-        let tree = Tree::new(-5);
-
-        assert_eq!(tree.length, 1);
-        assert_eq!(tree.root.value.unwrap(), -5);
+        let tree: Tree<i32> = Tree::new();
+        assert_eq!(tree.length, 0);
     }
 
     #[test]
     fn test_add_node() {
-        let mut tree = Tree::new(5);
+        let mut tree = Tree::new_with(5);
         tree.add(7);
 
         assert_eq!(tree.length, 2);
@@ -180,7 +198,7 @@ mod tests {
 
     #[test]
     fn test_contains() {
-        let mut tree = Tree::new('g');
+        let mut tree = Tree::new_with('g');
         tree.add('b');
 
         assert!(tree.contains('g'));
@@ -189,7 +207,7 @@ mod tests {
 
     #[test]
     fn test_remove_node() {
-        let mut tree = Tree::new(1);
+        let mut tree = Tree::new_with(1);
         tree.add(2);
         tree.add(3);
         tree.remove(3);
@@ -199,18 +217,26 @@ mod tests {
 
     #[test]
     fn test_get_max_val() {
-        let mut tree = Tree::new(1);
+        let mut tree = Tree::new_with(1);
         tree.add(2);
         tree.add(3);
 
         assert_eq!(tree.max(), 3);
     }
+
     #[test]
     fn test_get_min_val() {
-        let mut tree = Tree::new(4);
+        let mut tree = Tree::new_with(4);
         tree.add(2);
         tree.add(3);
 
         assert_eq!(tree.min(), 2);
     }
+
+    #[test]
+    fn test_is_leaf() {
+        let tree = Tree::new_with(1);
+        assert!(tree.is_leaf(&tree.root));
+    }
+
 }
