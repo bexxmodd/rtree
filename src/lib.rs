@@ -19,6 +19,10 @@ impl<T: PartialOrd + Display + Clone> Node<T> {
             right: None,
         }
     }
+
+    fn is_leaf(&self) -> bool {
+       self.left.is_none() && self.right.is_none() 
+    }
 }
 
 impl<T: PartialOrd + Display + Clone> Default for Node<T> {
@@ -54,6 +58,15 @@ impl<T: PartialOrd + Display + Clone> Tree<T> {
         }
     }
 
+    /// Create a BSTree from a Vector
+    fn new_from(vec: &Vec<T>) -> Self {
+        let mut tree: Tree<T> = Tree::new();
+        for item in vec {
+            tree.add(item.clone());
+        }
+        tree
+    }
+
     /// Get the left child of the Node. Method panics if node is empty
     pub fn get_left_child(&self) -> &Node<T> {
         self.root.left.as_ref().unwrap()
@@ -78,10 +91,6 @@ impl<T: PartialOrd + Display + Clone> Tree<T> {
         } else {
             None
         }
-    }
-
-    pub fn is_leaf(&self, n: &Node<T>) -> bool {
-       n.left.is_none() && n.right.is_none() 
     }
 
     pub fn contains(&self, val: T) -> bool {
@@ -113,7 +122,7 @@ impl<T: PartialOrd + Display + Clone> Tree<T> {
     }
 
     fn _add(n: &mut Node<T>, val: T) {
-        if let Some(v) = &mut n.value {
+        if let Some(v) = n.value.as_mut() {
             if &val == v {
                 return;
             } else if &val < v {
@@ -139,7 +148,14 @@ impl<T: PartialOrd + Display + Clone> Tree<T> {
 
     fn _remove(n: &mut Node<T>, val: T) {
         if let Some(v) = n.value.as_mut() {
-            if v == &val {
+            if &val == v {
+                if n.is_leaf() {
+                    //
+                }
+            } else if &val < v {
+                return Tree::_remove(n.left.as_mut().unwrap(), val);
+            } else {
+                Tree::_remove(n.right.as_mut().unwrap(), val);
             }
         }
     }
@@ -236,7 +252,16 @@ mod tests {
     #[test]
     fn test_is_leaf() {
         let tree = Tree::new_with(1);
-        assert!(tree.is_leaf(&tree.root));
+        assert!(tree.root.is_leaf());
+    }
+
+    #[test]
+    fn test_create_from_vec() {
+        let v = vec![32, 11, 5, 23, -5];
+        let tree = Tree::new_from(&v);
+
+        assert_eq!(tree.length, 5);
+        assert_eq!(tree.root.value.unwrap(), 32);
     }
 
 }
